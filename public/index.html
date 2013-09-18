@@ -1,0 +1,65 @@
+<html> <head>
+    <script src="http://code.jquery.com/jquery-1.6.4.min.js"></script> 
+    <script src="/socket.io/socket.io.js"></script>
+<script>
+
+$(document).ready(function() {
+var usersCount, messagesList, messageBox, sendButton, webSocket;
+var chatWindow = $('#output');
+
+function initialize() {
+  window.socket = io.connect('//33.33.33.10:3000');
+  socket.on('app-settings', function (data){
+    window.minEmitTime = data.minEmitTime;
+    window.maxEmitTime = data.maxEmitTime;
+  });
+
+  socket.on('server message', function(data){
+    receiveChatMessage(data);
+  });
+    //  sendChatMessage("Let's start talking!");
+}
+
+function receiveChatMessage(data) {
+  chatWindow.append("server says: " + data.data+"\n");
+  if(data.type == 'server reply'){
+    var newOutbound = createNewOutbound();
+    var randDelay = createDelay();
+    setTimeout(function(){
+      sendChatMessage({"type":"client message", "data": newOutbound})
+    }, randDelay);
+  } else if(data.type == 'server message'){
+    sendChatMessage(
+      {"type":"client reply", "data":"confirmed: " + data.data}
+    );
+
+  }
+}
+
+function sendChatMessage(messageVal) {
+  if(messageVal.type == "client message"){
+    socket.emit('client message', messageVal);
+  } else if(messageVal.type == "client reply"){
+    socket.emit('client message', messageVal);
+  }
+    chatWindow.append("I say: " + messageVal.data + "\n");
+}
+
+function createNewOutbound(){
+  return Math.random().toString(36).substr(2, 7)
+}
+
+function createDelay(){
+return test = Math.floor(Math.random() * (maxEmitTime - minEmitTime + 1)) + minEmitTime;
+}
+
+initialize();
+});
+
+</script>
+</head> <body>
+<textarea id="output" style="width: 100%; height: 100%;">
+</textarea> 
+<input type="button" id="#sendtestmessage" value="send test"></input>
+</body> </html>
+
